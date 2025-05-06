@@ -200,10 +200,16 @@ w_valdispbin <= w_A when "0010",
          "00000000" when others; -- dont care, addressed @ anodes
 
   -- sign/no sign/blank/digit disp. multiplexer
-w_seg <= "1111111" when w_signdigitsel(2) = '1';
-w_seg <= "1111111" when w_signdigitsel(2 downto 0) = "000";
-w_seg <= "0111111" when w_signdigitsel(2 downto 0) = "001";
-w_seg <= w_decseg  when w_signdigitsel(2 downto 1) = "01";
+with w_signdigitsel select
+  w_seg <= "1111111" when "100",  -- when bit 2 = '1'
+           "1111111" when "101",
+           "1111111" when "110",
+           "1111111" when "111",
+           
+           "1111111" when "000",  -- explicit match
+           "0111111" when "001",
+           w_decseg   when "010", "011",  -- when bits 2 downto 1 = "01"
+           (others => '0') when others;   -- default
 
   -- signals to basys3 IO
 w_clk  <= clk;
@@ -214,14 +220,18 @@ w_sw   <= sw(7 downto 0);
 an(3 downto 0) <= w_sel;
 seg <= w_seg;
 led(3 downto 0)   <= w_cycle;
-led(15 downto 12) <= w_flags;
 led(11 downto 4)  <= "00000000"; -- unused led -> GND
+led(15 downto 12) <= w_flags;
 
 -- process of register
-register_proc : process(w_sw, w_cycle)
+register_A_proc : process(w_sw, w_cycle)
 begin
   if rising_edge(w_cycle(1)) then w_A <= w_sw; end if;
+end process register_A_proc;
+
+register_B_proc : process(w_sw, w_cycle)
+begin
   if rising_edge(w_cycle(2)) then w_B <= w_sw; end if;
-end process register_proc;
+end process register_B_proc;
 
 end top_basys3_arch;

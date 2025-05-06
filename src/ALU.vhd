@@ -54,9 +54,10 @@ end component ripple_adder;
 
 -- signals
 
-signal w_A  : STD_LOGIC_VECTOR(7 downto 0);
-signal w_B  : STD_LOGIC_VECTOR(7 downto 0);
-signal w_op : STD_LOGIC_VECTOR(2 downto 0);
+signal w_A   : STD_LOGIC_VECTOR(7 downto 0);
+signal w_B   : STD_LOGIC_VECTOR(7 downto 0);
+signal w_Bin : STD_LOGIC_VECTOR(7 downto 0);
+signal w_op  : STD_LOGIC_VECTOR(2 downto 0);
 signal w_result : STD_LOGIC_VECTOR(7 downto 0);
 signal w_flags  : STD_LOGIC_VECTOR(3 downto 0);
 
@@ -77,7 +78,7 @@ begin
 ripple_1 : ripple_adder
 port map(
   A    => w_A(3 downto 0), -- least sig half of A
-  B    => w_B(3 downto 0),
+  B    => w_Bin(3 downto 0),
   Cin  => w_ifsub, -- carry in Nothing to first ripple
   S    => w_addsubres(3 downto 0),
   Cout => w_carrythru);
@@ -85,16 +86,20 @@ port map(
 ripple_2 : ripple_adder
 port map(
   A    => w_A(7 downto 4), -- most sig half of A
-  B    => w_B(7 downto 4),
+  B    => w_Bin(7 downto 4),
   Cin  => w_carrythru,
   S    => w_addsubres(7 downto 4),
   Cout => w_carryout);
 
 -- concurrent
+  -- map I to wires
+w_A   <= i_A;
+w_B   <= i_B;
+w_op  <= i_op;
   -- adder multiplexers for twos complement
 with w_op(0) select       -- flip
-  w_B <= w_B when '0',
-     not w_B when others;
+  w_Bin <= w_B when '0',
+       not w_B when others;
 with w_op(0) select       -- add 1
   w_ifsub <= '0' when '0',
              '1' when others;
@@ -125,10 +130,7 @@ w_flags(2) <= w_flag_C;
 w_flags(1) <= w_flag_Z;
 w_flags(0) <= w_flag_V;
 
-  -- map wires to IO
-w_A  <= i_A;
-w_B  <= i_B;
-w_op <= i_op;
+  -- map wires to I
 o_flags  <= w_flags;
 o_result <= w_result;
 
