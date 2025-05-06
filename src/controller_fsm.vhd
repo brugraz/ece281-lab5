@@ -39,7 +39,16 @@ end controller_fsm;
 
 architecture FSM of controller_fsm is
 
+signal w_cycle : STD_LOGIC_VECTOR(3 downto 0) := "0000";
+signal w_cycle_next : STD_LOGIC_VECTOR(3 downto 0) := "0001";
+
 begin
+w_cycle_next <= "0000" when i_reset = '1';
+w_cycle_next <= "0000" when w_cycle = "1000";
+w_cycle_next <= "0001" when w_cycle = "0000";
+w_cycle_next <= "0010" when w_cycle = "0001";
+w_cycle_next <= "0100" when w_cycle = "0010";
+w_cycle_next <= "1000" when w_cycle = "0100";
 
-
+o_cycle <= w_cycle_next when i_adv = '1';
 end FSM;
